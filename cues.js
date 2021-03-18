@@ -119,7 +119,8 @@ function mergeSongData(from_vdj,from_json) {
 
 const songsMatch = (a,b) => a.$.FileSize === b.$.FileSize && path.basename(a.$.FilePath) === path.basename(b.$.FilePath);
 const calculateMatchHash = (name,size) => `${size}_${name}`;
-const parsePath = (p) => p.indexOf("\\") ? path.win32.parse(p) : path.posix.parse(p);
+const isWindowsPath = (p) => p.indexOf("\\") !== -1;
+const parsePath = (p) => isWindowsPath(p) ? path.win32.parse(p) : path.posix.parse(p);
 const nameForPath = (p) => parsePath(p).base;
 
 async function walkFilesystemForSongs(dir) {
@@ -220,7 +221,11 @@ function mergeDatabases(a,b) {
 }
 
 function updateDatabasePaths(db,localFiles) {
-  const filesByHash = _.keyBy(localFiles,(o) => )
+  const filesByHash = _.keyBy(localFiles,"hash");
+  for (const song of db.VirtualDJ_Database.Song) {
+    const hash = calculateMatchHash(nameForPath(song.$.FilePath),song.$.FileSize);
+    if (filesByHash[hash]) song.$.FilePath = filesByHash[hash].path;
+  }
 }
 
 async function main2() {
@@ -231,7 +236,7 @@ async function main2() {
   const localDatabase = await loadDatabase(localDatabasePath);
 
   const importDatabase = await loadDatabase(importDatabasePath);
-  const localSongs = walkFilesystemForSongs(localRoot);
+  const localSongs = await walkFilesystemForSongs(localRoot);
 
   const newDatabase = mergeDatabases(localDatabase,importDatabase);
   updateDatabasePaths(newDatabase,localSongs);
@@ -239,4 +244,7 @@ async function main2() {
   saveDatabase(localDatabasePath,newDatabase);
 }
 
-main2();
+function main3() {
+}
+
+main3();
