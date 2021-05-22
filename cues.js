@@ -130,8 +130,13 @@ async function main2() {
   console.log("Updating repository database.xml...");
   saveDatabase(importDatabasePath,newDatabase);
   await execDir(importRepositoryPath,"git add database.xml");
-  await execDir(importRepositoryPath,`git commit -m 'Updated database.xml from ${os.hostname()}'`);
-  await execDir(importRepositoryPath,`git push origin master`);
+  const changes = await execDir(importRepositoryPath,`git status --porcelain`);
+  if (changes.length > 0) {
+    await execDir(importRepositoryPath,`git commit -m 'Updated database.xml from ${os.hostname()}'`);
+    await execDir(importRepositoryPath,`git push origin master`);
+  } else {
+    console.log("No changes made.");
+  }
 
   //Update the local database
   console.log("Updating local database.xml...");
